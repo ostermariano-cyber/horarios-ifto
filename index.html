@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0E3B2E">
+    <title>Horários de aula — IFTO Campus Palmas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+    <style>/* Página pública. Paleta do cerrado: verde-cerrado, verde IF e o dourado do capim (só para "agora"). */
+:root {
+  --cerrado: #0E3B2E;
+  --cerrado-2: #1B5440;
+  --if: #2F9E41;
+  --capim: #E3A92B;
+  --capim-claro: #FFF4D6;
+  --papel: #FBFCFA;
+  --nevoa: #EEF3EF;
+  --linha: #DCE5DF;
+  --tinta: #16241D;
+  --tinta-2: #4A5C52;
+  --erro: #B42318;
+  --raio: 12px;
+  --display: "Bricolage Grotesque", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --texto: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: var(--texto);
+  font-size: 16px;
+  line-height: 1.45;
+  background: var(--papel);
+  color: var(--tinta);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--capim); outline-offset: 2px; }
+
+.visualmente-oculto {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* ---------- barra ---------- */
+.barra {
+  background: var(--cerrado);
+  color: #fff;
+  padding: 14px clamp(16px, 4vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.marca { display: flex; flex-direction: column; line-height: 1.1; }
+.marca-titulo { font-family: var(--display); font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; }
+.marca-local { font-size: 0.85rem; color: #B9D3C4; }
+.periodo { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #B9D3C4; }
+.periodo select {
+  background: var(--cerrado-2); color: #fff; border: 1px solid #2E6B55; border-radius: 999px; padding: 6px 12px;
+}
+
+.faixa-rascunho {
+  background: repeating-linear-gradient(-45deg, var(--capim-claro), var(--capim-claro) 14px, #FBEAB8 14px, #FBEAB8 28px);
+  color: #5C4100;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid #EBCB78;
+}
+
+/* ---------- busca ---------- */
+.conteudo { max-width: 1180px; margin: 0 auto; padding: 22px clamp(16px, 4vw, 40px) 32px; }
+
+.busca { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.abas {
+  display: inline-flex; padding: 4px; gap: 2px; background: var(--nevoa); border-radius: 999px;
+}
+.abas button {
+  border: 0; background: none; padding: 8px 16px; border-radius: 999px; cursor: pointer; color: var(--tinta-2);
+  font-weight: 700;
+}
+.abas button[aria-selected="true"] { background: #fff; color: var(--cerrado); box-shadow: 0 1px 2px rgba(14, 59, 46, 0.18); }
+
+.combo { position: relative; flex: 1 1 320px; min-width: 0; }
+.combo input {
+  width: 100%; padding: 12px 16px 12px 44px; border: 1.5px solid var(--linha); border-radius: 999px; background: #fff;
+  font-size: 1rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%234A5C52' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='9' cy='9' r='6'/%3E%3Cpath d='m14 14 4 4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 16px center;
+}
+.combo input:focus { border-color: var(--if); outline: none; box-shadow: 0 0 0 4px rgba(47, 158, 65, 0.15); }
+.sugestoes {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 6px); margin: 0; padding: 6px; list-style: none;
+  background: #fff; border: 1px solid var(--linha); border-radius: var(--raio);
+  box-shadow: 0 12px 32px rgba(14, 59, 46, 0.16); max-height: 360px; overflow: auto;
+}
+.sugestoes .grupo { padding: 8px 10px 4px; font-size: 0.78rem; color: var(--tinta-2); font-weight: 700; }
+.sugestoes [role="option"] {
+  padding: 9px 10px; border-radius: 8px; cursor: pointer; display: flex; gap: 10px; align-items: baseline;
+}
+.sugestoes [role="option"] b { font-family: var(--display); min-width: 64px; }
+.sugestoes [role="option"] span { color: var(--tinta-2); font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sugestoes [role="option"][aria-selected="true"], .sugestoes [role="option"]:hover { background: var(--nevoa); }
+.sugestoes .nada { padding: 10px; color: var(--tinta-2); }
+
+.info { margin: 14px 4px 0; color: var(--tinta-2); font-size: 0.95rem; }
+.info.aviso, .info.erro { font-weight: 700; }
+.info.erro { color: var(--erro); }
+
+/* ---------- folha (turma, professor ou sala) ---------- */
+.folha { margin-top: 18px; }
+.cabeca { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 24px; margin-bottom: 18px; }
+.nome-grande {
+  margin: 0; font-family: var(--display); font-weight: 800; letter-spacing: -0.035em; line-height: 0.95;
+  font-size: clamp(2.6rem, 8vw, 5.2rem); color: var(--cerrado);
+}
+.nome-grande.longo { font-size: clamp(2rem, 5.5vw, 3.4rem); letter-spacing: -0.025em; }
+.nome-completo { margin: 8px 0 0; color: var(--tinta-2); font-size: 1.02rem; max-width: 60ch; }
+.sub-folha { display: none; }
+
+.agora {
+  margin: 0; display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: var(--raio);
+  background: var(--capim-claro); border: 1px solid #EFD48C; max-width: 460px; line-height: 1.35;
+}
+.agora::before {
+  content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--capim);
+  box-shadow: 0 0 0 4px rgba(227, 169, 43, 0.28);
+}
+.agora.calmo { background: var(--nevoa); border-color: var(--linha); }
+.agora.calmo::before { background: var(--tinta-2); box-shadow: none; }
+.agora strong { font-weight: 700; }
+
+/* ---------- semana (computador e impressão) ---------- */
+.tabela-rolagem { overflow-x: auto; border-radius: var(--raio); }
+.horario { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; min-width: 720px; }
+.horario th { font-weight: 700; }
+.horario thead th {
+  font-family: var(--display); font-size: 0.98rem; color: var(--tinta-2); text-align: left; padding: 0 8px 10px;
+}
+.horario thead th.hoje { color: var(--cerrado); }
+.horario thead th.hoje::after {
+  content: "hoje"; margin-left: 8px; font-family: var(--texto); font-size: 0.72rem; font-weight: 700;
+  color: #5C4100; background: var(--capim-claro); border: 1px solid #EFD48C; padding: 1px 7px; border-radius: 999px;
+}
+.horario th.canto { width: 76px; }
+.horario th.tempo {
+  text-align: right; padding: 6px 12px 0 0; vertical-align: top; color: var(--tinta-2); font-size: 0.8rem;
+  font-variant-numeric: tabular-nums; border-top: 1px solid var(--linha); white-space: nowrap;
+}
+.horario th.tempo .hora-inicio { display: block; color: var(--tinta); font-size: 0.92rem; }
+.horario td { border-top: 1px solid var(--linha); padding: 3px; height: 48px; vertical-align: top; }
+.horario td.coluna-hoje { background: rgba(227, 169, 43, 0.06); }
+.horario tr.inicio-turno th, .horario tr.inicio-turno td { border-top: 2px solid #B8C9BE; }
+.horario tr.inicio-turno th.tempo::before {
+  display: block; font-family: var(--display); font-weight: 700; color: var(--cerrado); font-size: 0.82rem; margin-bottom: 4px;
+}
+.horario tr.turno-M.inicio-turno th.tempo::before { content: "Manhã"; }
+.horario tr.turno-T.inicio-turno th.tempo::before { content: "Tarde"; }
+.horario tr.turno-N.inicio-turno th.tempo::before { content: "Noite"; }
+
+.bloco {
+  --cor: #8a9a90;
+  position: relative; height: 100%; min-height: 42px; border-radius: 10px; padding: 8px 10px 9px 12px;
+  background: color-mix(in srgb, var(--cor) 16%, #fff);
+  border: 1px solid color-mix(in srgb, var(--cor) 38%, #fff);
+  display: flex; flex-direction: column; gap: 2px; overflow: hidden; break-inside: avoid;
+}
+.bloco::before {
+  content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 4px; border-radius: 0 4px 4px 0; background: var(--cor);
+}
+.bloco + .bloco { margin-top: 4px; }
+.bloco strong { font-weight: 700; line-height: 1.2; font-size: 0.95rem; }
+.bloco .linha { font-size: 0.82rem; color: var(--tinta-2); line-height: 1.3; }
+.bloco .grupo { font-weight: 700; color: var(--tinta); }
+.bloco.agora-mesmo { box-shadow: 0 0 0 2.5px var(--capim); }
+.bloco.agora-mesmo::after {
+  content: "agora"; order: -1; align-self: flex-start; margin-bottom: 3px; font-size: 0.7rem; font-weight: 700;
+  background: var(--capim); color: #3E2C00; padding: 0 8px; border-radius: 999px;
+}
+
+/* ---------- dia a dia (celular) ---------- */
+.dia-a-dia { display: none; }
+.dias {
+  display: grid; grid-template-columns: repeat(var(--n, 5), 1fr); gap: 6px; margin-bottom: 14px;
+  position: sticky; top: 0; z-index: 5; background: var(--papel); padding: 6px 0;
+}
+.dias button {
+  border: 1.5px solid var(--linha); background: #fff; border-radius: 12px; padding: 8px 0 6px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 700;
+}
+.dias button small { font-weight: 400; font-size: 0.72rem; color: var(--tinta-2); }
+.dias button[aria-pressed="true"] { background: var(--cerrado); border-color: var(--cerrado); color: #fff; }
+.dias button[aria-pressed="true"] small { color: #B9D3C4; }
+.dias button.hoje:not([aria-pressed="true"]) { border-color: var(--capim); }
+.linha-do-dia { list-style: none; margin: 0; padding: 0 0 0 4px; }
+.item-dia { display: grid; grid-template-columns: 58px 1fr; gap: 12px; position: relative; padding-bottom: 12px; }
+.item-dia .hora {
+  font-variant-numeric: tabular-nums; font-weight: 700; padding-top: 8px; text-align: right; font-size: 0.95rem;
+}
+.item-dia .hora small { display: block; font-weight: 400; color: var(--tinta-2); font-size: 0.8rem; }
+.sem-aula { color: var(--tinta-2); padding: 18px 4px; }
+
+/* ---------- rodapé ---------- */
+.rodape {
+  max-width: 1180px; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 36px; color: var(--tinta-2); font-size: 0.88rem;
+  display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between;
+}
+.rodape p { margin: 0; }
+.rodape-nota { flex-basis: 100%; font-size: 0.8rem; }
+.botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.botoes button {
+  border: 1.5px solid var(--linha); background: #fff; border-radius: 999px; padding: 7px 14px; cursor: pointer; font-weight: 700;
+  color: var(--cerrado);
+}
+.botoes button:hover { border-color: var(--if); }
+
+/* ---------- celular ---------- */
+@media (max-width: 760px) {
+  .tabela-rolagem { display: none; }
+  .dia-a-dia { display: block; }
+  .busca { gap: 10px; }
+  .abas { width: 100%; }
+  .abas button { flex: 1; }
+  .agora { max-width: none; width: 100%; }
+  .cabeca { margin-bottom: 12px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .agora::before { animation: pulso 2.4s ease-in-out infinite; }
+  @keyframes pulso { 50% { box-shadow: 0 0 0 7px rgba(227, 169, 43, 0.12); } }
+}
+
+/* ---------- impressão / PDF: uma folha A4 deitada por item ---------- */
+@media print {
+  @page { size: A4 landscape; margin: 9mm; }
+  body { background: #fff; font-size: 10pt; }
+  .barra, .faixa-rascunho, .busca, .info, .rodape, .agora, .dia-a-dia { display: none !important; }
+  .conteudo { max-width: none; padding: 0; }
+  .folha { margin: 0; page-break-after: always; }
+  .folha:last-child { page-break-after: auto; }
+  .cabeca { margin-bottom: 8px; }
+  .nome-grande, .nome-grande.longo { font-size: 26pt; }
+  .nome-completo { margin-top: 2px; font-size: 10pt; }
+  .sub-folha { display: block; margin: 2px 0 0; font-size: 8.5pt; color: var(--tinta-2); }
+  .tabela-rolagem { display: block !important; overflow: visible; }
+  .horario { min-width: 0; }
+  .horario td { height: 30px; }
+  .horario td.coluna-hoje { background: none; }
+  .horario thead th.hoje::after { content: none; }
+  .bloco { padding: 4px 6px 5px 9px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .bloco.agora-mesmo { box-shadow: none; }
+  .bloco.agora-mesmo::after { content: none; }
+  .bloco strong { font-size: 8.5pt; }
+  .bloco .linha { font-size: 7.5pt; }
+  body.imprimindo-todos #quadro { display: none !important; }
+  body:not(.imprimindo-todos) #impressao { display: none !important; }
+}
+</style>
+  </head>
+  <body>
+    <header class="barra">
+      <div class="marca">
+        <span class="marca-titulo">Horários de aula</span>
+        <span class="marca-local">IFTO Campus Palmas</span>
+      </div>
+      <label class="periodo" id="rotulo-periodo" hidden>
+        <span>Período</span>
+        <select id="periodo"></select>
+      </label>
+    </header>
+
+    <div class="faixa-rascunho" id="faixa-rascunho" hidden>
+      Rascunho: esta versão ainda não foi publicada e pode mudar.
+    </div>
+
+    <main class="conteudo">
+      <section class="busca" id="controles" hidden>
+        <div class="abas" role="tablist" aria-label="Consultar por">
+          <button type="button" role="tab" data-vista="turma" aria-selected="true">Turma</button>
+          <button type="button" role="tab" data-vista="professor" aria-selected="false">Professor</button>
+          <button type="button" role="tab" data-vista="sala" aria-selected="false">Sala</button>
+        </div>
+        <div class="combo">
+          <label class="visualmente-oculto" for="busca" id="rotulo-busca">Buscar turma</label>
+          <input id="busca" type="search" autocomplete="off" spellcheck="false"
+                 role="combobox" aria-expanded="false" aria-controls="sugestoes" aria-autocomplete="list"
+                 placeholder="Digite sua turma, ex.: adm">
+          <ul class="sugestoes" id="sugestoes" role="listbox" hidden></ul>
+        </div>
+      </section>
+
+      <p class="info" id="info">Carregando…</p>
+
+      <section id="quadro" aria-live="polite"></section>
+      <section id="impressao" class="impressao" hidden></section>
+    </main>
+
+    <footer class="rodape">
+      <p id="versao"></p>
+      <div class="botoes" id="botoes" hidden>
+        <button type="button" id="imprimir">Imprimir esta</button>
+        <button type="button" id="imprimir-todos">Imprimir todas as turmas</button>
+      </div>
+      <p class="rodape-nota">Instituto Federal do Tocantins, Campus Palmas. Dúvidas sobre o seu horário: procure a coordenação do curso.</p>
+    </footer>
+
+    <script>var PUBLICO_EMBUTIDO = 'SITE';</script>
+    <script>/* Página pública: consulta por turma, professor e sala. JavaScript puro: nunca usar o sinal de "menor que". */
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var estado = { indice: null, foto: null, vista: 'turma', item: '', dia: '', ativo: -1 };
+  var NOMES_VISTA = { turma: 'turma', professor: 'professor', sala: 'sala' };
+  var DICAS = {
+    turma: 'Digite sua turma, ex.: adm', professor: 'Digite o nome do professor', sala: 'Digite a sala, ex.: bloco 14'
+  };
+  var TODOS = { turma: 'Imprimir todas as turmas', professor: 'Imprimir todos os professores', sala: 'Imprimir todas as salas' };
+  var NOMES_NIVEL = {
+    MEDIO_INTEGRADO: 'Ensino médio integrado', SUBSEQUENTE: 'Técnico subsequente', PROEJA: 'Proeja',
+    SUPERIOR: 'Superior', POS_GRADUACAO: 'Pós-graduação', FIC: 'Cursos FIC'
+  };
+  var DIAS_UTEIS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+  var CURTO = { Segunda: 'Seg', 'Terça': 'Ter', Quarta: 'Qua', Quinta: 'Qui', Sexta: 'Sex', 'Sábado': 'Sáb' };
+  var DIA_DA_SEMANA = {
+    'segunda-feira': 'Segunda', 'terça-feira': 'Terça', 'quarta-feira': 'Quarta',
+    'quinta-feira': 'Quinta', 'sexta-feira': 'Sexta', 'sábado': 'Sábado'
+  };
+
+  function el(tag, classe, texto) {
+    var e = document.createElement(tag);
+    if (classe) e.className = classe;
+    if (texto !== undefined && texto !== null) e.textContent = texto;
+    return e;
+  }
+
+  function limpar(no) { while (no.firstChild) no.removeChild(no.firstChild); }
+
+  function info(texto, classe) {
+    var i = $('info');
+    i.textContent = texto || '';
+    i.className = 'info ' + (classe || '');
+    i.hidden = !texto;
+  }
+
+  function semAcento(t) {
+    return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+
+  function dataHora(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' às ' +
+      d.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function minutos(hhmm) {
+    var p = String(hhmm).split(':');
+    return Number(p[0]) * 60 + Number(p[1]);
+  }
+
+  /** Dia e hora agora em Palmas (mesmo fuso de Brasília). Para testes: window.__AGORA = { dia, hora }. */
+  function agora() {
+    if (window.__AGORA) return { dia: window.__AGORA.dia, min: minutos(window.__AGORA.hora) };
+    try {
+      var partes = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo', weekday: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+      }).formatToParts(new Date());
+      var v = {};
+      partes.forEach(function (p) { v[p.type] = p.value; });
+      return { dia: DIA_DA_SEMANA[v.weekday] || '', min: Number(v.hour) * 60 + Number(v.minute) };
+    } catch (e) {
+      return { dia: '', min: 0 };
+    }
+  }
+
+  // ---------- carregar ----------
+  function iniciar() {
+    if (PUBLICO_EMBUTIDO !== 'SITE') {
+      // Prévia dentro do Apps Script
+      if (PUBLICO_EMBUTIDO && PUBLICO_EMBUTIDO.erro) { info(PUBLICO_EMBUTIDO.erro, 'erro'); return; }
+      if (!PUBLICO_EMBUTIDO) { info('Ainda não há versão publicada neste período.', 'aviso'); return; }
+      usarFoto(PUBLICO_EMBUTIDO);
+      return;
+    }
+    buscar('dados/indice.json', function (indice) {
+      estado.indice = indice;
+      var pedido = lerEndereco().periodo;
+      var existe = indice.periodos.some(function (p) { return p.id === pedido; });
+      carregarPeriodo(existe ? pedido : indice.atual);
+    }, function () { info('O horário ainda não foi publicado.', 'aviso'); });
+  }
+
+  function buscar(caminho, ok, falha) {
+    if (!window.fetch) { falha(); return; }
+    fetch(caminho, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error(String(r.status));
+      return r.json();
+    }).then(ok, falha);
+  }
+
+  function carregarPeriodo(id) {
+    var p = estado.indice.periodos.filter(function (x) { return x.id === id; })[0];
+    info('Carregando…');
+    buscar('dados/' + encodeURIComponent(id) + '.json?v=' + (p ? p.versao : ''), usarFoto, function () {
+      info('Não foi possível carregar o horário. Recarregue a página.', 'erro');
+    });
+  }
+
+  function prepararPeriodos() {
+    var periodos = estado.indice ? estado.indice.periodos : [];
+    $('rotulo-periodo').hidden = !(periodos.length > 1);
+    var sel = $('periodo');
+    limpar(sel);
+    periodos.forEach(function (p) { sel.appendChild(new Option(p.nome, p.id)); });
+    if (estado.foto) sel.value = estado.foto.periodo.id;
+  }
+
+  // ---------- dados da fotografia ----------
+  function indexar(lista) { var m = {}; lista.forEach(function (x) { m[x.id] = x; }); return m; }
+
+  function usarFoto(foto) {
+    estado.foto = foto;
+    estado.idx = {
+      turmas: indexar(foto.turmas), professores: indexar(foto.professores), salas: indexar(foto.salas),
+      tempos: indexar(foto.tempos)
+    };
+    $('faixa-rascunho').hidden = !foto.rascunho;
+    info('');
+    $('versao').textContent = foto.rascunho
+      ? 'Rascunho de ' + foto.periodo.nome + ', como está agora na administração.'
+      : foto.periodo.nome + ', versão ' + foto.versao + ', publicada em ' + dataHora(foto.publicadoEm) + '.' +
+        (foto.descricao ? ' ' + foto.descricao : '');
+    $('controles').hidden = false;
+    $('botoes').hidden = false;
+    prepararPeriodos();
+    var pedido = lerEndereco();
+    estado.vista = NOMES_VISTA[pedido.vista] ? pedido.vista : 'turma';
+    trocarVista(pedido.item);
+  }
+
+  function lista(vista) {
+    var f = estado.foto;
+    return vista === 'turma' ? f.turmas : vista === 'professor' ? f.professores : f.salas;
+  }
+
+  function rotuloDoItem(vista, x) { return vista === 'turma' ? x.rotulo : x.nome; }
+
+  function trocarVista(escolhido) {
+    var itens = lista(estado.vista);
+    var existe = itens.some(function (x) { return x.id === escolhido; });
+    estado.item = existe ? escolhido : (itens.length ? itens[0].id : '');
+    $('busca').placeholder = DICAS[estado.vista];
+    $('rotulo-busca').textContent = 'Buscar ' + NOMES_VISTA[estado.vista];
+    $('busca').value = '';
+    $('imprimir-todos').textContent = TODOS[estado.vista];
+    Array.prototype.forEach.call(document.querySelectorAll('.abas [data-vista]'), function (b) {
+      b.setAttribute('aria-selected', String(b.getAttribute('data-vista') === estado.vista));
+    });
+    fecharSugestoes();
+    mostrar();
+  }
+
+  // ---------- busca com sugestões ----------
+  function opcoesFiltradas() {
+    var termo = semAcento($('busca').value.trim());
+    var achados = lista(estado.vista).filter(function (x) {
+      if (!termo) return true;
+      var texto = semAcento(rotuloDoItem(estado.vista, x) + ' ' + (x.nome || '') + ' ' + (x.curso || ''));
+      return termo.split(/\s+/).every(function (p) { return texto.indexOf(p) !== -1; });
+    });
+    if (!termo) return achados;
+    // Quem começa com o que foi digitado vem primeiro ("mat" acha Mat 3P antes de Informática)
+    var nota = function (x) { return semAcento(rotuloDoItem(estado.vista, x)).indexOf(termo) === 0 ? 0 : 1; };
+    return achados.map(function (x, i) { return { x: x, i: i }; })
+      .sort(function (a, b) { return nota(a.x) - nota(b.x) || a.i - b.i; })
+      .map(function (o) { return o.x; });
+  }
+
+  function abrirSugestoes() {
+    var ul = $('sugestoes');
+    limpar(ul);
+    var itens = opcoesFiltradas();
+    estado.opcoes = itens;
+    estado.ativo = itens.length ? 0 : -1;
+    if (!itens.length) {
+      ul.appendChild(el('li', 'nada', 'Nada encontrado. Confira a grafia.'));
+    }
+    var grupoAnterior = null;
+    itens.forEach(function (x, i) {
+      if (estado.vista === 'turma' && !$('busca').value.trim()) {
+        var g = NOMES_NIVEL[x.nivel] || 'Outras turmas';
+        if (g !== grupoAnterior) { ul.appendChild(el('li', 'grupo', g)); grupoAnterior = g; }
+      }
+      var li = el('li');
+      li.setAttribute('role', 'option');
+      li.id = 'opcao-' + i;
+      li.setAttribute('data-id', x.id);
+      if (estado.vista === 'turma') {
+        li.appendChild(el('b', '', x.rotulo));
+        li.appendChild(el('span', '', x.nome));
+      } else {
+        li.appendChild(el('span', '', x.nome));
+      }
+      li.addEventListener('mousedown', function (ev) { ev.preventDefault(); escolher(x.id); });
+      ul.appendChild(li);
+    });
+    ul.hidden = false;
+    $('busca').setAttribute('aria-expanded', 'true');
+    marcarAtivo();
+  }
+
+  function marcarAtivo() {
+    Array.prototype.forEach.call(document.querySelectorAll('#sugestoes [role="option"]'), function (li, i) {
+      li.setAttribute('aria-selected', String(i === estado.ativo));
+      if (i === estado.ativo && li.scrollIntoView) li.scrollIntoView({ block: 'nearest' });
+    });
+    $('busca').setAttribute('aria-activedescendant', estado.ativo === -1 ? '' : 'opcao-' + estado.ativo);
+  }
+
+  function fecharSugestoes() {
+    $('sugestoes').hidden = true;
+    $('busca').setAttribute('aria-expanded', 'false');
+  }
+
+  function escolher(id) {
+    estado.item = id;
+    $('busca').value = '';
+    fecharSugestoes();
+    $('busca').blur();
+    mostrar();
+  }
+
+  // ---------- endereço (#turma=…) para compartilhar ----------
+  function lerEndereco() {
+    var saida = {};
+    String(window.location.hash || '').replace(/^#/, '').split('&').forEach(function (par) {
+      var i = par.indexOf('=');
+      if (i === -1) return;
+      var chave = decodeURIComponent(par.slice(0, i));
+      var valor = decodeURIComponent(par.slice(i + 1));
+      if (NOMES_VISTA[chave]) { saida.vista = chave; saida.item = valor; }
+      if (chave === 'periodo') saida.periodo = valor;
+    });
+    return saida;
+  }
+
+  function gravarEndereco() {
+    var partes = [];
+    if (estado.indice && estado.foto) partes.push('periodo=' + encodeURIComponent(estado.foto.periodo.id));
+    if (estado.item) partes.push(estado.vista + '=' + encodeURIComponent(estado.item));
+    try { window.history.replaceState(null, '', '#' + partes.join('&')); } catch (e) { /* prévia dentro de iframe */ }
+  }
+
+  // ---------- desenhar ----------
+  function aulasDe(vista, id) {
+    var campo = vista === 'turma' ? 'turmas' : vista === 'professor' ? 'professores' : 'salas';
+    return estado.foto.aulas.filter(function (a) { return a[campo].indexOf(id) !== -1; });
+  }
+
+  function nomes(ids, mapa, padrao) {
+    var n = ids.map(function (id) { return mapa[id] ? (mapa[id].rotulo || mapa[id].nome) : id; });
+    return n.length ? n.join(', ') : padrao;
+  }
+
+  function diasUsados() {
+    var sabado = estado.foto.aulas.some(function (a) { return a.dia === 'Sábado'; });
+    return DIAS_UTEIS.concat(sabado ? ['Sábado'] : []);
+  }
+
+  function inicioDe(a) { return estado.idx.tempos[a.tempos[0]].inicio; }
+  function fimDe(a) { return estado.idx.tempos[a.tempos[a.tempos.length - 1]].fim; }
+
+  /** Aula acontecendo agora (ou a próxima de hoje) entre as aulas do item. */
+  function situacaoAgora(aulas) {
+    var a = agora();
+    if (!a.dia) return { dia: '' };
+    var hoje = aulas.filter(function (x) { return x.dia === a.dia; })
+      .sort(function (x, y) { return minutos(inicioDe(x)) - minutos(inicioDe(y)); });
+    var atual = hoje.filter(function (x) { return a.min >= minutos(inicioDe(x)) && minutos(fimDe(x)) > a.min; });
+    var proxima = hoje.filter(function (x) { return minutos(inicioDe(x)) > a.min; })[0] || null;
+    return { dia: a.dia, atuais: atual, proxima: proxima, temHoje: hoje.length > 0 };
+  }
+
+  function linhasDoBloco(a, vista, idAtual) {
+    var idx = estado.idx;
+    var linhas = [];
+    var outras = a.turmas.filter(function (t) { return t !== idAtual; });
+    if (vista === 'turma') {
+      linhas.push(nomes(a.professores, idx.professores, 'Professor a definir'));
+      if (outras.length) linhas.push('Junto com ' + nomes(outras, idx.turmas, ''));
+    } else {
+      linhas.push(nomes(a.turmas, idx.turmas, ''));
+      if (vista === 'sala') linhas.push(nomes(a.professores, idx.professores, 'Professor a definir'));
+    }
+    if (vista !== 'sala') linhas.push(nomes(a.salas, idx.salas, 'Sala a definir'));
+    return linhas;
+  }
+
+  function bloco(a, vista, idAtual, ehAgora) {
+    var b = el('div', 'bloco' + (ehAgora ? ' agora-mesmo' : ''));
+    b.style.setProperty('--cor', a.cor);
+    b.appendChild(el('strong', '', a.disciplina));
+    if (a.grupo) b.appendChild(el('span', 'linha grupo', 'Grupo ' + a.grupo));
+    linhasDoBloco(a, vista, idAtual).forEach(function (t) { if (t) b.appendChild(el('span', 'linha', t)); });
+    return b;
+  }
+
+  function titulo(vista, id) {
+    var idx = estado.idx;
+    if (vista === 'turma') {
+      var t = idx.turmas[id];
+      return { grande: t ? t.rotulo : id, completo: t ? t.nome : '' };
+    }
+    if (vista === 'professor') return { grande: idx.professores[id] ? idx.professores[id].nome : id, completo: 'Horário do professor' };
+    return { grande: idx.salas[id] ? idx.salas[id].nome : id, completo: 'Ocupação da sala' };
+  }
+
+  function textoAgora(s, vista, id) {
+    if (!s.dia) return null;
+    var p = el('p', 'agora');
+    var texto = el('span');
+    p.appendChild(texto);
+    if (s.atuais && s.atuais.length) {
+      var a = s.atuais[0];
+      texto.appendChild(el('strong', '', 'Agora: ' + a.disciplina));
+      var onde = vista === 'sala' ? 'com ' + nomes(a.turmas, estado.idx.turmas, '') : 'na ' + nomes(a.salas, estado.idx.salas, 'sala a definir');
+      texto.appendChild(document.createTextNode(', até ' + fimDe(a) + ', ' + onde));
+      return p;
+    }
+    if (s.proxima) {
+      texto.appendChild(el('strong', '', 'Próxima hoje: ' + s.proxima.disciplina));
+      texto.appendChild(document.createTextNode(', às ' + inicioDe(s.proxima)));
+      return p;
+    }
+    p.className = 'agora calmo';
+    p.textContent = s.temHoje ? 'As aulas de hoje já terminaram.' : 'Sem aulas hoje.';
+    return p;
+  }
+
+  /** Quadro de um item: cabeçalho, semana (tabela) e dia a dia (celular). */
+  function quadro(vista, id, paraImprimir) {
+    var folha = el('article', 'folha');
+    folha.setAttribute('data-item', id);
+    var t = titulo(vista, id);
+    var cabeca = el('header', 'cabeca');
+    var nomesBox = el('div');
+    var h2 = el('h2', 'nome-grande' + (t.grande.length > 14 ? ' longo' : ''), t.grande);
+    nomesBox.appendChild(h2);
+    if (t.completo) nomesBox.appendChild(el('p', 'nome-completo', t.completo));
+    nomesBox.appendChild(el('p', 'sub-folha', 'IFTO Campus Palmas, ' + estado.foto.periodo.nome +
+      (estado.foto.rascunho ? ' (rascunho)' : ', versão ' + estado.foto.versao)));
+    cabeca.appendChild(nomesBox);
+    var aulas = aulasDe(vista, id);
+    var s = paraImprimir ? { dia: '' } : situacaoAgora(aulas);
+    var avisoAgora = textoAgora(s, vista, id);
+    if (avisoAgora) cabeca.appendChild(avisoAgora);
+    folha.appendChild(cabeca);
+    if (!aulas.length) { folha.appendChild(el('p', 'sem-aula', 'Sem aulas nesta versão.')); return folha; }
+    var atuais = s.atuais || [];
+
+    var dias = diasUsados();
+    var turnos = {};
+    aulas.forEach(function (a) { a.tempos.forEach(function (tp) { turnos[estado.idx.tempos[tp].turno] = true; }); });
+    var tempos = estado.foto.tempos.filter(function (tp) { return turnos[tp.turno]; });
+
+    var mapa = {};
+    dias.forEach(function (d) { mapa[d] = {}; });
+    aulas.forEach(function (a, i) {
+      if (!mapa[a.dia]) return;
+      a.tempos.forEach(function (tp) { (mapa[a.dia][tp] = mapa[a.dia][tp] || []).push(i); });
+    });
+    var chave = function (d, tp) { return (mapa[d][tp] || []).join(','); };
+
+    // Semana
+    var rolagem = el('div', 'tabela-rolagem');
+    var tabela = el('table', 'horario');
+    var cab = el('tr');
+    cab.appendChild(el('th', 'canto', ''));
+    dias.forEach(function (d) { cab.appendChild(el('th', d === s.dia ? 'hoje' : '', d)); });
+    var thead = el('thead');
+    thead.appendChild(cab);
+    tabela.appendChild(thead);
+    var tbody = el('tbody');
+    var coberto = {};
+    tempos.forEach(function (tp, i) {
+      var inicioTurno = !i || tempos[i - 1].turno !== tp.turno;
+      var tr = el('tr', 'turno-' + tp.turno + (inicioTurno ? ' inicio-turno' : ''));
+      var th = el('th', 'tempo');
+      th.appendChild(el('span', 'hora-inicio', tp.inicio));
+      th.appendChild(el('span', 'hora-fim', tp.fim));
+      th.title = tp.id;
+      tr.appendChild(th);
+      dias.forEach(function (d) {
+        if (coberto[d + '|' + tp.id]) return;
+        var k = chave(d, tp.id);
+        var td = el('td', (k ? 'com-aula' : '') + (d === s.dia ? ' coluna-hoje' : ''));
+        if (k) {
+          var span = 1;
+          for (var j = i + 1; tempos[j] && tempos[j].turno === tp.turno && chave(d, tempos[j].id) === k; j++) {
+            coberto[d + '|' + tempos[j].id] = true;
+            span++;
+          }
+          td.rowSpan = span;
+          mapa[d][tp.id].forEach(function (n) {
+            td.appendChild(bloco(aulas[n], vista, id, atuais.indexOf(aulas[n]) !== -1));
+          });
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    tabela.appendChild(tbody);
+    rolagem.appendChild(tabela);
+    folha.appendChild(rolagem);
+
+    // Dia a dia (celular)
+    if (!paraImprimir) folha.appendChild(diaADia(vista, id, aulas, dias, s, atuais));
+    return folha;
+  }
+
+  function diaADia(vista, id, aulas, dias, s, atuais) {
+    var caixa = el('div', 'dia-a-dia');
+    if (dias.indexOf(estado.dia) === -1) {
+      estado.dia = dias.indexOf(s.dia) !== -1 ? s.dia : (dias.filter(function (d) {
+        return aulas.some(function (a) { return a.dia === d; });
+      })[0] || dias[0]);
+    }
+    var botoes = el('div', 'dias');
+    botoes.style.setProperty('--n', String(dias.length));
+    botoes.setAttribute('role', 'group');
+    botoes.setAttribute('aria-label', 'Dia da semana');
+    var listaDia = el('ol', 'linha-do-dia');
+    var desenharDia = function () {
+      limpar(listaDia);
+      Array.prototype.forEach.call(botoes.children, function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-dia') === estado.dia));
+      });
+      var doDia = aulas.filter(function (a) { return a.dia === estado.dia; })
+        .sort(function (x, y) { return minutos(inicioDe(x)) - minutos(inicioDe(y)); });
+      if (!doDia.length) { listaDia.appendChild(el('li', 'sem-aula', 'Sem aulas na ' + estado.dia.toLowerCase() + '.')); return; }
+      doDia.forEach(function (a) {
+        var li = el('li', 'item-dia');
+        var hora = el('span', 'hora', inicioDe(a));
+        hora.appendChild(el('small', '', fimDe(a)));
+        li.appendChild(hora);
+        li.appendChild(bloco(a, vista, id, atuais.indexOf(a) !== -1));
+        listaDia.appendChild(li);
+      });
+    };
+    dias.forEach(function (d) {
+      var n = aulas.filter(function (a) { return a.dia === d; }).length;
+      var b = el('button', d === s.dia ? 'hoje' : '');
+      b.type = 'button';
+      b.setAttribute('data-dia', d);
+      b.appendChild(document.createTextNode(CURTO[d] || d));
+      b.appendChild(el('small', '', n ? n + (n === 1 ? ' aula' : ' aulas') : 'livre'));
+      b.addEventListener('click', function () { estado.dia = d; desenharDia(); });
+      botoes.appendChild(b);
+    });
+    caixa.appendChild(botoes);
+    caixa.appendChild(listaDia);
+    desenharDia();
+    return caixa;
+  }
+
+  function mostrar() {
+    var q = $('quadro');
+    limpar(q);
+    if (estado.item) q.appendChild(quadro(estado.vista, estado.item, false));
+    gravarEndereco();
+  }
+
+  // ---------- imprimir ----------
+  function imprimirTodos() {
+    var caixa = $('impressao');
+    limpar(caixa);
+    lista(estado.vista).forEach(function (x) { caixa.appendChild(quadro(estado.vista, x.id, true)); });
+    caixa.hidden = false;
+    document.body.classList.add('imprimindo-todos');
+    window.print();
+  }
+
+  window.addEventListener('afterprint', function () {
+    document.body.classList.remove('imprimindo-todos');
+    $('impressao').hidden = true;
+    limpar($('impressao'));
+  });
+
+  // ---------- eventos ----------
+  Array.prototype.forEach.call(document.querySelectorAll('.abas [data-vista]'), function (b) {
+    b.addEventListener('click', function () {
+      estado.vista = b.getAttribute('data-vista');
+      trocarVista('');
+    });
+  });
+  var busca = $('busca');
+  var fecharDepois = null;
+  var abrir = function () {
+    // Cancela um "fechar" que ficou pendente do clique anterior (senão a lista some sozinha)
+    if (fecharDepois) { clearTimeout(fecharDepois); fecharDepois = null; }
+    abrirSugestoes();
+  };
+  busca.addEventListener('focus', abrir);
+  busca.addEventListener('input', abrir);
+  busca.addEventListener('blur', function () {
+    fecharDepois = setTimeout(function () { fecharDepois = null; fecharSugestoes(); }, 120);
+  });
+  busca.addEventListener('keydown', function (ev) {
+    var n = (estado.opcoes || []).length;
+    if (ev.key === 'ArrowDown' && n) { ev.preventDefault(); estado.ativo = (estado.ativo + 1) % n; marcarAtivo(); }
+    if (ev.key === 'ArrowUp' && n) { ev.preventDefault(); estado.ativo = (estado.ativo + n - 1) % n; marcarAtivo(); }
+    if (ev.key === 'Enter' && estado.ativo !== -1 && n) { ev.preventDefault(); escolher(estado.opcoes[estado.ativo].id); }
+    if (ev.key === 'Escape') { fecharSugestoes(); busca.blur(); }
+  });
+  $('periodo').addEventListener('change', function () { carregarPeriodo(this.value); });
+  $('imprimir').addEventListener('click', function () { window.print(); });
+  $('imprimir-todos').addEventListener('click', imprimirTodos);
+
+  iniciar();
+})();
+</script>
+  </body>
+</html>
