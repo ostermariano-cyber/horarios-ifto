@@ -75,7 +75,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 /* ---------- busca ---------- */
-.conteudo { max-width: 1180px; margin: 0 auto; padding: 22px clamp(16px, 4vw, 40px) 32px; }
+.conteudo { max-width: none; margin: 0 auto; padding: 22px clamp(16px, 4vw, 40px) 32px; }
 
 .busca { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .abas {
@@ -208,7 +208,7 @@ button, input, select { font: inherit; color: inherit; }
 
 /* ---------- rodapé ---------- */
 .rodape {
-  max-width: 1180px; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 36px; color: var(--tinta-2); font-size: 0.88rem;
+  max-width: none; margin: 0 auto; padding: 8px clamp(16px, 4vw, 40px) 36px; color: var(--tinta-2); font-size: 0.88rem;
   display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between;
 }
 .rodape p { margin: 0; }
@@ -260,6 +260,11 @@ button, input, select { font: inherit; color: inherit; }
   .bloco .linha { font-size: 7.5pt; }
   body.imprimindo-todos #quadro { display: none !important; }
   body:not(.imprimindo-todos) #impressao { display: none !important; }
+}
+
+/* Telas grandes: a grade usa toda a largura e o texto cresce um pouco */
+@media (min-width: 1500px) {
+  .horario { font-size: 1.05rem; }
 }
 </style>
   </head>
@@ -569,8 +574,9 @@ button, input, select { font: inherit; color: inherit; }
     return n.length ? n.join(', ') : padrao;
   }
 
-  function diasUsados() {
-    var sabado = estado.foto.aulas.some(function (a) { return a.dia === 'Sábado'; });
+  /** Segunda a sexta; o sábado só aparece se esta turma (professor, sala) tiver aula nele. */
+  function diasUsados(aulas) {
+    var sabado = aulas.some(function (a) { return a.dia === 'Sábado'; });
     return DIAS_UTEIS.concat(sabado ? ['Sábado'] : []);
   }
 
@@ -665,7 +671,7 @@ button, input, select { font: inherit; color: inherit; }
     if (!aulas.length) { folha.appendChild(el('p', 'sem-aula', 'Sem aulas nesta versão.')); return folha; }
     var atuais = s.atuais || [];
 
-    var dias = diasUsados();
+    var dias = diasUsados(aulas);
     var turnos = {};
     aulas.forEach(function (a) { a.tempos.forEach(function (tp) { turnos[estado.idx.tempos[tp].turno] = true; }); });
     var tempos = estado.foto.tempos.filter(function (tp) { return turnos[tp.turno]; });
